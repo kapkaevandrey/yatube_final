@@ -60,17 +60,14 @@ def profile(request, username: str):
 
 def post_view(request, username: str, post_id: int):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    form = CommentForm(request.POST or None)
-    if form.is_valid():
-        form = form.save(commit=False)
-        form.author = request.user
-        form.post = post
-        form.save()
-        return redirect("posts:post", username=username, post_id=post_id)
+    form = CommentForm()
+    following = request.user.is_authenticated \
+                and post.author.following.filter(user=request.user).exists()
     context = {"author": post.author,
                "post": post,
                "comments": post.comments.all(),
-               "form": form}
+               "form": form,
+               "following": following}
     return render(request, 'post.html', context)
 
 
@@ -113,19 +110,41 @@ def new_post(request):
 
 
 @login_required
+def add_comment(request, username: str, post_id: int):
+    post = get_object_or_404(Post, pk=post_id, author__username=username)
+    form = CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+        return redirect("posts:post", username=username, post_id=post_id)
+    return render(request, "includes/comments.html",
+                  {"form": form,
+                   "post": post})
+
+
+@login_required
 def follow_index(request):
     user = request.user
     authors = user.follower.values_list('author', flat=True)
     posts_list = Post.objects.filter(author__id__in=authors)
+    posts_list.order_by("-pub_date")
     page = _get_pages(request, posts_list, 10)
     return render(request, "follow.html", {"page": page})
 
 
 @login_required
 def profile_follow(request, username: str):
-    pass
+    author = get_object_or_404(User, username=username)
+    user = request.user
+    if author != user:
+        Follow.objects.get_or_create(user=user, author=author)
+    return redirect("posts:profile", username=username)
 
 
 @login_required
 def profile_unfollow(request, username: str):
-    pass
+    user = request.user
+    Follow.objects.get(user=user, author__username=username).delete()
+    return redirect("posts:profile", username=username)
