@@ -84,6 +84,7 @@ def post_edit(request, username: str, post_id: int):
         return redirect("posts:post", username=username, post_id=post_id)
 
     context = {"form": form,
+               "post": post,
                "inscriptions": {"title": "Редактировать запись",
                                 "header": "Редактировать запись",
                                 "button": "Сохранить"}
