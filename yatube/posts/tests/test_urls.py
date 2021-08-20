@@ -26,18 +26,28 @@ class TestSetUpClassMixin:
                  "and about nothing.",
             author=cls.user
         )
-        cls.templates_url_name = {
-            "index.html": "/",
-            "group.html": f"/group/{cls.group.slug}/",
-            "post.html": f"/{cls.post.author.username}/{cls.post.pk}/",
-            "newpost.html": "/new/",
-            "profile.html": f"/{cls.user.username}/"
+        cls.public_urls = {
+            "/": "index.html",
+            "/500/": "misc/500.html",
+            f"/group/{cls.group.slug}/": "group.html",
+            f"/{cls.post.author.username}/{cls.post.pk}/": "post.html",
+            f"/{cls.user.username}/": "profile.html",
         }
-        cls.public_urls = (cls.templates_url_name["index.html"],
-                           cls.templates_url_name["group.html"],
-                           cls.templates_url_name["post.html"],
-                           cls.templates_url_name["profile.html"],
-                           )
+        cls.private_urls = {
+            "/new/": "newpost.html",
+            f"/{cls.post.author.username}/{cls.post.pk}/edit/":
+                "newpost.html",
+            "/follow/": "follow.html",
+            f"/{cls.post.author.username}/{cls.post.pk}/comment/":
+            "includes/comments.html"
+        }
+        cls.templates_url_name = {**cls.private_urls, **cls.public_urls}
+        follow_urls = [f"/{cls.post.author.username}/follow/",
+                       f"/{cls.post.author.username}/unfollow/"]
+        private_urls = list(cls.private_urls.keys()) + follow_urls
+        cls.redirect_urls_to_auth = {
+            url: f"/auth/login/?next={url}" for url in
+            private_urls}
 
 
 class PostsURLTest(TestSetUpClassMixin, TestCase):
@@ -61,43 +71,29 @@ class PostsURLTest(TestSetUpClassMixin, TestCase):
     def test_url_exists_at_desired_location_anonymous(self):
         """Checking access to the main, group, profile and post
         pages of any user."""
-        for url in PostsURLTest.public_urls:
+        code_500 = HTTPStatus.INTERNAL_SERVER_ERROR
+        for url in self.public_urls.keys():
+            code = code_500 if url == "/500/" else HTTPStatus.OK
             with self.subTest(url=url):
                 response = self.guest_user.get(url)
+                self.assertEqual(response.status_code, code,
+                                 msg=f"Страница {url} недоступна")
+
+    def test_private_url_exists_at_desired_location_autorized(self):
+        """Checking access to the private page for authorized user."""
+        for url in self.private_urls.keys():
+            with self.subTest(url=url):
+                response = self.authorized_user.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK,
                                  msg=f"Страница {url} недоступна")
 
-    def test_new_post_url_exists_at_desired_location_autorized(self):
-        """Checking access to the page for creating a new post
-        only for authorized user."""
-        url = "/new/"
-        response = self.authorized_user.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK,
-                         msg=f"Страница {url} недоступна")
-
-    def test_new_post_url_redirect_anonymous(self):
-        """Checking redirect on the page for creating a new post
-        to page of signup for for an unauthorized user."""
-        url = "/new/"
-        expected_redirect = f"/auth/login/?next={url}"
-        response = self.guest_user.get(url, follow=True)
-        self.assertRedirects(response, expected_redirect)
-
-    def test_edit_post_url_exists_at_desired_location_autorized_author(self):
-        """Checking access to the page for editing an entry
-        only for an authorized user who is the author of the post."""
-        url = f"/{self.post.author.username}/{self.post.pk}/edit/"
-        response = self.authorized_user.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK,
-                         msg=f"Страница {url} недоступна")
-
-    def test_edit_post_url_redirect_anonymous(self):
-        """Checking redirect on the page for post edit
-        to page of signup for an unauthorized user."""
-        url = f"/{self.post.author.username}/{self.post.pk}/edit/"
-        response = self.guest_user.get(url, follow=True)
-        expected_redirect = f"/auth/login/?next={url}"
-        self.assertRedirects(response, expected_redirect)
+    def test_private_url_redirect_anonymous(self):
+        """Checking redirect on the private page to page
+        of signup for for an unauthorized user."""
+        for url, expected_redirect in self.redirect_urls_to_auth.items():
+            with self.subTest(url=url):
+                response = self.guest_user.get(url, follow=True)
+                self.assertRedirects(response, expected_redirect)
 
     def test_edit_post_url_redirect_authorized_not_author(self):
         """Checking redirect on the page for post edit
@@ -121,8 +117,8 @@ class PostsTemplateTest(TestSetUpClassMixin, TestCase):
         cache.clear()
         authorized_user = Client()
         authorized_user.force_login(PostsTemplateTest.user)
-        templates_url_name = PostsTemplateTest.templates_url_name
-        for template, address in templates_url_name.items():
+        templates_url_name = self.templates_url_name
+        for address, template in templates_url_name.items():
             with self.subTest(address=address):
                 response = authorized_user.get(address)
                 self.assertTemplateUsed(response, template)
