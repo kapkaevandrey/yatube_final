@@ -9,7 +9,7 @@ from django.urls import reverse
 from django import forms
 from django.contrib.auth import get_user_model
 
-from ..models import Post, Group
+from ..models import Post, Group, Follow, Comment
 
 User = get_user_model()
 
@@ -24,6 +24,9 @@ class TestViewsSetUpClassMixin:
         cls.user = User.objects.create(username="DracoMalfoy")
         cls.authorized_user = Client()
         cls.authorized_user.force_login(cls.user)
+        cls.follow_user1 = User.objects.create(username="Harry Potter")
+        cls.follow_user2 = User.objects.create(username="Voldemort")
+        Follow.objects.create(user=cls.follow_user1, author=cls.user)
         cls.first_group = Group.objects.create(
             title="Slytherin",
             description="Draco dormiens nunquam titillandus!",
@@ -46,9 +49,13 @@ class TestViewsSetUpClassMixin:
                                                       author=cls.user,
                                                       group=cls.first_group,
                                                       image=cls.test_image)
+        cls.comment = Comment.objects.create(text="One ticket to Azkaban please",
+                                             post=cls.post_in_first_group,
+                                             author=cls.follow_user1)
 
         cls.templates_pages_names = {
             "index.html": reverse("posts:index"),
+            "follow.html": reverse("posts:follow_index"),
             "newpost.html": reverse("posts:new_post"),
             "group.html": reverse("posts:post_in_group",
                                   kwargs={"slug": cls.first_group.slug}),
@@ -97,12 +104,20 @@ class PostPagesTest(TestViewsSetUpClassMixin, TestCase):
         self.assertEqual(post_object.text, "Avada Kedavra")
         self.assertEqual(post_object.image, f"posts/{self.test_image}")
 
+    def test_follow_homepage_show_correct_context(self):
+        authorized_user = Client()
+        authorized_user.force_login(self.follow_user1)
+        response = authorized_user.get(reverse("posts:follow_index"))
+        post_object = response.context["page"].object_list[0]
+        self.assertEqual(post_object.text, "Avada Kedavra")
+        self.assertEqual(post_object.image, f"posts/{self.test_image}")
+
     def test_homepage_uses_the_cache(self):
         second_post = Post.objects.create(text="Obliviate",
                                           author=self.user,
                                           image=self.test_image)
         # first request
-        response = self.authorized_user.get(reverse("posts:index"))
+        self.authorized_user.get(reverse("posts:index"))
         second_post.delete()
         # second request
         response = self.authorized_user.get(reverse("posts:index"))
@@ -111,8 +126,6 @@ class PostPagesTest(TestViewsSetUpClassMixin, TestCase):
         # third request
         response = self.authorized_user.get(reverse("posts:index"))
         self.assertEqual(len(response.context["page"].object_list), 1)
-
-
 
     def test_group_page_show_correct_context(self):
         response = self.authorized_user.get(
@@ -163,13 +176,15 @@ class PostPagesTest(TestViewsSetUpClassMixin, TestCase):
         response = self.authorized_user.get(
             reverse("posts:post",
                     kwargs={"username": self.user.username,
-                            "post_id": self.post_in_first_group.pk})
+                            "post_id": self.post_in_first_group.pk},)
         )
         post_object = response.context["post"]
         author = response.context["author"]
+        comment = response.context["comments"].first()
         self.assertEqual(post_object.text, "Avada Kedavra")
         self.assertEqual(post_object.image, f"posts/{self.test_image}")
         self.assertEqual(author.username, "DracoMalfoy")
+        self.assertEqual(comment.text, "One ticket to Azkaban please")
 
     def test_edit_post_page_show_correct_context(self):
         """Check type of form field and
@@ -206,7 +221,9 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create(username="Garry Potter")
+        cls.user = User.objects.create(username="Harry Potter")
+        cls.follow_user = User.objects.create(username="Severus Snape")
+        Follow.objects.create(user=cls.follow_user, author=cls.user)
         cls.group = Group.objects.create(
             title="Grifindor",
             description="We like Lions",
@@ -230,7 +247,6 @@ class PaginatorViewsTest(TestCase):
                   group=cls.group, image=cls.test_image)
              for i in range(1, 14)]
         )
-        cls.guest_user = Client()
 
     def tearDown(self) -> None:
         cache.clear()
@@ -241,7 +257,7 @@ class PaginatorViewsTest(TestCase):
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self) -> None:
-        self.guest_user = PaginatorViewsTest.guest_user
+        self.guest_user = Client()
         self.group = PaginatorViewsTest.group
 
     def test_home_page_contains_ten_and_three_records(self):
@@ -275,6 +291,18 @@ class PaginatorViewsTest(TestCase):
                 self.assertEqual(
                     len(response.context['page'].object_list), number)
 
+    def test_profile_follow_page_contains_ten_and_three_records(self):
+        authorized_user = Client()
+        authorized_user.force_login(self.follow_user)
+        reverse_name = reverse("posts:follow_index")
+        num_of_posts_in_page = {10: reverse_name,
+                                3: reverse_name + "?page=2"}
+        for number, reverse_name in num_of_posts_in_page.items():
+            with self.subTest(reverse_name=reverse_name):
+                response = authorized_user.get(reverse_name)
+                self.assertEqual(
+                    len(response.context['page'].object_list), number)
+
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class CreatePostGroupTest(TestViewsSetUpClassMixin, TestCase):
@@ -282,7 +310,7 @@ class CreatePostGroupTest(TestViewsSetUpClassMixin, TestCase):
     def setUp(self) -> None:
         self.first_group = CreatePostGroupTest.first_group
         self.post = CreatePostGroupTest.post_in_first_group
-        self.guest_user = CreatePostGroupTest.guest_user
+        self.guest_user = Client()
         # new post in second group
         self.second_group = Group.objects.create(
             title="Gryffindor",
@@ -326,3 +354,55 @@ class CreatePostGroupTest(TestViewsSetUpClassMixin, TestCase):
         )
         self.assertNotIn(self.post_in_second_group,
                          response.context["page"].object_list)
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
+class CreateFollowTest(TestViewsSetUpClassMixin, TestCase):
+    def setUp(self) -> None:
+        # have follower follow_user1
+        self.post = CreateFollowTest.post_in_first_group
+        self.user = CreateFollowTest.user
+        self.follow_user1 = CreateFollowTest.follow_user1
+        self.follow_user2 = CreateFollowTest.follow_user2
+
+    def tearDown(self) -> None:
+        cache.clear()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
+    def test_post_located_in_page_index_of_follow_user(self):
+        authorized_user = Client()
+        authorized_user.force_login(self.follow_user1)
+        response = authorized_user.get(reverse("posts:follow_index"))
+        self.assertIn(self.post,
+                      response.context["page"].object_list)
+
+    def test_post_not_located_in_page_index_of_follow_user(self):
+        authorized_user = Client()
+        authorized_user.force_login(self.follow_user2)
+        response = authorized_user.get(reverse("posts:follow_index"))
+        self.assertNotIn(self.post,
+                         response.context["page"].object_list)
+
+    def test_user_follow_to_another_user(self):
+        count_followers = self.user.following.count()
+        authorized_user = Client()
+        authorized_user.force_login(self.follow_user2)
+        authorized_user.get(reverse("posts:profile_follow",
+                                    kwargs={"username": self.user.username}))
+        self.assertEqual(self.user.following.count(), count_followers + 1)
+        self.assertTrue(
+            self.user.following.filter(user=self.follow_user2).exists())
+
+    def test_user_unfollow_from_another_user(self):
+        count_followers = self.user.following.count()
+        authorized_user = Client()
+        authorized_user.force_login(self.follow_user1)
+        authorized_user.get(reverse("posts:profile_unfollow",
+                                    kwargs={"username": self.user.username}))
+        self.assertEqual(self.user.following.count(), count_followers - 1)
+        self.assertFalse(
+            self.user.following.filter(user=self.follow_user1).exists())
