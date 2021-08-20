@@ -9,7 +9,7 @@
     {% block content %}
     <div class="col-md-9">
       {% for post in page %}
-        {% include "includes/post_card.html" %}
+        {% include "includes/post_card.html" with add_comment=True %}
       {% endfor %}
       {% include "includes/paginator.html" %}
     </div>

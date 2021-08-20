@@ -11,7 +11,7 @@
     {% block content %}
     <div class="col-md-9">
     <!-- Пост -->
-      {% include "includes/post_card.html" %}
+      {% include "includes/post_card.html" with add_comment=False%}
       {% include "includes/comments.html" %}
     </div>
     {% endblock %}

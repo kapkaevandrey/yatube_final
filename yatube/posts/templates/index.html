@@ -5,9 +5,9 @@
 <div class="container">
   {% include "includes/menu.html" with index=True %}
   {% for post in page %}
-    {% include "includes/post_card.html" with post=post %}
+    {% include "includes/post_card.html" with add_comment=True%}
   {% endfor %}
 </div>
-  {% include "includes/paginator.html" %}
+  {% include "includes/paginator.html" with post=post %}
 
 {% endblock %}

@@ -8,7 +8,7 @@
 {% block content %}
   <p>{{ group.description }}</p>
   {% for post in page %}
-      {% include "includes/post_card.html" %}
+      {% include "includes/post_card.html" with add_comment=True %}
     <hr>
   {% endfor %}
 {% include "includes/paginator.html" %}

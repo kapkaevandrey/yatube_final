@@ -23,7 +23,7 @@
       <div class="btn-group ">
 
         <!-- Ссылка на страницу записи в атрибуте href-->
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and add_comment%}
             <div>
         <a class="btn btn-sm btn-primary" href="{% url 'posts:post' post.author.username post.id %}" role="button">
           Добавить комментарий
