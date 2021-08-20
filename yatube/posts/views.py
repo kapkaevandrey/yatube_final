@@ -1,7 +1,6 @@
 from django.core.paginator import Paginator, Page
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 
 from .models import Post, Group, User, Follow
@@ -51,7 +50,7 @@ def profile(request, username: str):
     posts = author.posts.all()
     page = _get_pages(request, posts, 10)
     following = user.is_authenticated and \
-                Follow.objects.filter(user=user, author=author).exists()
+        Follow.objects.filter(user=user, author=author).exists()
     context = {"author": author,
                "page": page,
                "following": following}
@@ -62,7 +61,7 @@ def post_view(request, username: str, post_id: int):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     form = CommentForm()
     following = request.user.is_authenticated \
-                and post.author.following.filter(user=request.user).exists()
+        and post.author.following.filter(user=request.user).exists()
     context = {"author": post.author,
                "post": post,
                "comments": post.comments.all(),
