@@ -1,12 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Последние обновления на сайте{% endblock %}
-{% block header %}Последние обновления на сайте{% endblock %}
+{% block title %}Посты любимых авторов{% endblock %}
+{% block header %}Последние обновления{% endblock %}
 {% block content %}
 <div class="container">
+  {% include "includes/menu.html" %}
   {% for post in page %}
-    {% include "includes/post_card.html" with post=post %}
+    {% include "includes/post_card.html" %}
   {% endfor %}
 </div>
-  {% include "includes/paginator.html" with items="page" paginator=paginator%}
+  {% include "includes/paginator.html" %}
 
 {% endblock %}

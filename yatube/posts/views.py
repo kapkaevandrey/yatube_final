@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 
-from .models import Post, Group, User
+from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
 
 
@@ -47,10 +47,14 @@ def group_posts(request, slug):
 
 def profile(request, username: str):
     author = get_object_or_404(User, username=username)
+    user = request.user
     posts = author.posts.all()
     page = _get_pages(request, posts, 10)
+    following = user.is_authenticated and \
+                Follow.objects.filter(user=user, author=author).exists()
     context = {"author": author,
-               "page": page}
+               "page": page,
+               "following": following}
     return render(request, 'profile.html', context)
 
 
@@ -110,12 +114,18 @@ def new_post(request):
 
 @login_required
 def follow_index(request):
-    pass
+    user = request.user
+    authors = user.follower.values_list('author', flat=True)
+    posts_list = Post.objects.filter(author__id__in=authors)
+    page = _get_pages(request, posts_list, 10)
+    return render(request, "follow.html", {"page": page})
+
 
 @login_required
-def profile_follow(request):
+def profile_follow(request, username: str):
     pass
 
+
 @login_required
-def profile_unfollow(request):
+def profile_unfollow(request, username: str):
     pass
