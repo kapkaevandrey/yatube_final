@@ -15,6 +15,7 @@ TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 User = get_user_model()
 
+
 class TestFormsSetUpClassMixin:
     @classmethod
     def setUpClass(cls):
@@ -120,7 +121,7 @@ class CommentFormTest(TestFormsSetUpClassMixin, TestCase):
         kwargs = {"username": self.user.username,
                   "post_id": self.post.pk}
         response = self.authorized_user.post(
-            reverse("posts:post", kwargs=kwargs),
+            reverse("posts:add_comment", kwargs=kwargs),
             data=form_data,
             follow=True
         )
