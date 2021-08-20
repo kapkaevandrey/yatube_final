@@ -45,13 +45,15 @@ class TestViewsSetUpClassMixin:
             content_type="image/png"
         )
 
-        cls.post_in_first_group = Post.objects.create(text="Avada Kedavra",
-                                                      author=cls.user,
-                                                      group=cls.first_group,
-                                                      image=cls.test_image)
-        cls.comment = Comment.objects.create(text="One ticket to Azkaban please",
-                                             post=cls.post_in_first_group,
-                                             author=cls.follow_user1)
+        cls.post_in_first_group = Post.objects.create(
+            text="Avada Kedavra",
+            author=cls.user,
+            group=cls.first_group,
+            image=cls.test_image)
+        cls.comment = Comment.objects.create(
+            text="One ticket to Azkaban please",
+            post=cls.post_in_first_group,
+            author=cls.follow_user1)
 
         cls.templates_pages_names = {
             "index.html": reverse("posts:index"),
@@ -176,7 +178,7 @@ class PostPagesTest(TestViewsSetUpClassMixin, TestCase):
         response = self.authorized_user.get(
             reverse("posts:post",
                     kwargs={"username": self.user.username,
-                            "post_id": self.post_in_first_group.pk},)
+                            "post_id": self.post_in_first_group.pk}, )
         )
         post_object = response.context["post"]
         author = response.context["author"]

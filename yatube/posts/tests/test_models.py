@@ -36,7 +36,7 @@ class PostGroupCommentModelTest(TestCase):
         group = self.group
         comment = self.comment
         follow = self.follow
-        follow_expected_name = f"Подписчик Obi Van, подписан на Yoda"
+        follow_expected_name = "Подписчик Obi Van, подписан на Yoda"
         objects_expected_name = {post: post.text[:15],
                                  group: group.title,
                                  comment: comment.text[:15],
