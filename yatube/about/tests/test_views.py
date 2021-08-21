@@ -9,8 +9,8 @@ class StaticViewsTest(TestCase):
         """Checking templates."""
         self.guest_user = Client()
         self.template_pages_name = {
-            "author.html": reverse("about:author"),
-            "tech.html": reverse("about:tech")
+            "about/author.html": reverse("about:author"),
+            "about/tech.html": reverse("about:tech")
         }
 
         for template, reverse_name in self.template_pages_name.items():
