@@ -150,3 +150,5 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+PAGINATOR_PAGE_NUM = 10
