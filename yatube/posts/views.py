@@ -1,16 +1,10 @@
-from django.core.paginator import Paginator, Page
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 
+from .utils import _get_pages
 from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
-
-
-def _get_pages(request, page_list: object, num_page: int) -> Page:
-    paginator = Paginator(page_list, num_page)
-    page_number = request.GET.get('page')
-    return paginator.get_page(page_number)
 
 
 def page_not_found(request, exception):
@@ -31,14 +25,14 @@ def index(request):
     if post_list is None:
         post_list = Post.objects.all()
         cache.set("index_page", post_list, timeout=20)
-    page = _get_pages(request, post_list, 10)
+    page = _get_pages(request, post_list)
     return render(request, "posts/index.html", {"page": page})
 
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
-    page = _get_pages(request, posts, 10)
+    page = _get_pages(request, posts)
     context = {"group": group,
                "page": page}
     return render(request, "posts/group.html", context)
@@ -48,9 +42,9 @@ def profile(request, username: str):
     author = get_object_or_404(User, username=username)
     user = request.user
     posts = author.posts.all()
-    page = _get_pages(request, posts, 10)
-    following = user.is_authenticated and \
-        Follow.objects.filter(user=user, author=author).exists()
+    page = _get_pages(request, posts)
+    following = (user.is_authenticated and
+                 Follow.objects.filter(user=user, author=author).exists())
     context = {"author": author,
                "page": page,
                "following": following}
@@ -60,8 +54,8 @@ def profile(request, username: str):
 def post_view(request, username: str, post_id: int):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     form = CommentForm()
-    following = request.user.is_authenticated \
-        and post.author.following.filter(user=request.user).exists()
+    following = (request.user.is_authenticated and
+                 post.author.following.filter(user=request.user).exists())
     context = {"author": post.author,
                "post": post,
                "comments": post.comments.all(),
@@ -126,11 +120,9 @@ def add_comment(request, username: str, post_id: int):
 
 @login_required
 def follow_index(request):
-    user = request.user
-    authors = user.follower.values_list('author', flat=True)
-    posts_list = Post.objects.filter(author__id__in=authors)
+    posts_list = Post.objects.filter(author__following__user=request.user)
     posts_list.order_by("-pub_date")
-    page = _get_pages(request, posts_list, 10)
+    page = _get_pages(request, posts_list)
     return render(request, "posts/follow.html", {"page": page})
 
 
@@ -146,5 +138,6 @@ def profile_follow(request, username: str):
 @login_required
 def profile_unfollow(request, username: str):
     user = request.user
-    Follow.objects.get(user=user, author__username=username).delete()
+    follow = get_object_or_404(Follow, user=user, author__username=username)
+    follow.delete()
     return redirect("posts:profile", username=username)
