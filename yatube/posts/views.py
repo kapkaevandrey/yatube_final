@@ -43,8 +43,8 @@ def profile(request, username: str):
     user = request.user
     posts = author.posts.all()
     page = _get_pages(request, posts)
-    following = (user.is_authenticated and
-                 Follow.objects.filter(user=user, author=author).exists())
+    following = (user.is_authenticated
+                 and Follow.objects.filter(user=user, author=author).exists())
     context = {"author": author,
                "page": page,
                "following": following}
@@ -54,8 +54,8 @@ def profile(request, username: str):
 def post_view(request, username: str, post_id: int):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     form = CommentForm()
-    following = (request.user.is_authenticated and
-                 post.author.following.filter(user=request.user).exists())
+    following = (request.user.is_authenticated
+                 and post.author.following.filter(user=request.user).exists())
     context = {"author": post.author,
                "post": post,
                "comments": post.comments.all(),
