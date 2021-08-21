@@ -3,11 +3,11 @@
 {% block header %}Последние обновления{% endblock %}
 {% block content %}
 <div class="container">
-  {% include "includes/menu.html" with follow=True %}
+  {% include "posts/includes/menu.html" with follow=True %}
   {% for post in page %}
-    {% include "includes/post_card.html" with post=post add_comment=True%}
+    {% include "posts/includes/post_card.html" with post=post add_comment=True%}
   {% endfor %}
 </div>
-  {% include "includes/paginator.html" %}
+  {% include "posts/includes/paginator.html" %}
 
 {% endblock %}

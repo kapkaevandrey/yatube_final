@@ -27,19 +27,19 @@ class TestSetUpClassMixin:
             author=cls.user
         )
         cls.public_urls = {
-            "/": "index.html",
+            "/": "posts/index.html",
             "/500/": "misc/500.html",
-            f"/group/{cls.group.slug}/": "group.html",
-            f"/{cls.post.author.username}/{cls.post.pk}/": "post.html",
-            f"/{cls.user.username}/": "profile.html",
+            f"/group/{cls.group.slug}/": "posts/group.html",
+            f"/{cls.post.author.username}/{cls.post.pk}/": "posts/post.html",
+            f"/{cls.user.username}/": "posts/profile.html",
         }
         cls.private_urls = {
-            "/new/": "newpost.html",
+            "/new/": "posts/newpost.html",
             f"/{cls.post.author.username}/{cls.post.pk}/edit/":
-                "newpost.html",
-            "/follow/": "follow.html",
+                "posts/newpost.html",
+            "/follow/": "posts/follow.html",
             f"/{cls.post.author.username}/{cls.post.pk}/comment/":
-            "includes/comments.html"
+            "posts/includes/comments.html"
         }
         cls.templates_url_name = {**cls.private_urls, **cls.public_urls}
         follow_urls = [f"/{cls.post.author.username}/follow/",

@@ -3,11 +3,11 @@
 {% block header %}Последние обновления на сайте{% endblock %}
 {% block content %}
 <div class="container">
-  {% include "includes/menu.html" with index=True %}
+  {% include "posts/includes/menu.html" with index=True %}
   {% for post in page %}
-    {% include "includes/post_card.html" with add_comment=True%}
+    {% include "posts/includes/post_card.html" with add_comment=True%}
   {% endfor %}
 </div>
-  {% include "includes/paginator.html" with post=post %}
+  {% include "posts/includes/paginator.html" with post=post %}
 
 {% endblock %}

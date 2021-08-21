@@ -4,15 +4,15 @@
 <main role="main" class="container">
   <div class="row">
     <div class="col-md-3 mb-3 mt-1">
-      {% include "includes/author_card.html" %}
+      {% include "posts/includes/author_card.html" %}
     </div>
     {% endblock %}
 
     {% block content %}
     <div class="col-md-9">
     <!-- Пост -->
-      {% include "includes/post_card.html" with add_comment=False%}
-      {% include "includes/comments.html" %}
+      {% include "posts/includes/post_card.html" with add_comment=False%}
+      {% include "posts/includes/comments.html" %}
     </div>
     {% endblock %}
   </div>

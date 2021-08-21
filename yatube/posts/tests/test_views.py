@@ -56,17 +56,20 @@ class TestViewsSetUpClassMixin:
             author=cls.follow_user1)
 
         cls.templates_pages_names = {
-            "index.html": reverse("posts:index"),
-            "follow.html": reverse("posts:follow_index"),
-            "newpost.html": reverse("posts:new_post"),
-            "group.html": reverse("posts:post_in_group",
-                                  kwargs={"slug": cls.first_group.slug}),
-            "profile.html": reverse("posts:profile",
-                                    kwargs={"username": cls.user.username}),
-            "post.html": reverse("posts:post",
-                                 kwargs={
-                                     "username": cls.user.username,
-                                     "post_id": cls.post_in_first_group.pk})
+            "posts/index.html": reverse("posts:index"),
+            "posts/follow.html": reverse("posts:follow_index"),
+            "posts/newpost.html": reverse("posts:new_post"),
+            "posts/group.html":
+                reverse("posts:post_in_group",
+                        kwargs={"slug": cls.first_group.slug}),
+            "posts/profile.html":
+                reverse("posts:profile",
+                        kwargs={"username": cls.user.username}),
+            "posts/post.html":
+                reverse("posts:post",
+                        kwargs={
+                            "username": cls.user.username,
+                            "post_id": cls.post_in_first_group.pk})
         }
 
 

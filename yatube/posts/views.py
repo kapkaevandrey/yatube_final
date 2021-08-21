@@ -32,7 +32,7 @@ def index(request):
         post_list = Post.objects.all()
         cache.set("index_page", post_list, timeout=20)
     page = _get_pages(request, post_list, 10)
-    return render(request, "index.html", {"page": page})
+    return render(request, "posts/index.html", {"page": page})
 
 
 def group_posts(request, slug):
@@ -41,7 +41,7 @@ def group_posts(request, slug):
     page = _get_pages(request, posts, 10)
     context = {"group": group,
                "page": page}
-    return render(request, "group.html", context)
+    return render(request, "posts/group.html", context)
 
 
 def profile(request, username: str):
@@ -54,7 +54,7 @@ def profile(request, username: str):
     context = {"author": author,
                "page": page,
                "following": following}
-    return render(request, 'profile.html', context)
+    return render(request, 'posts/profile.html', context)
 
 
 def post_view(request, username: str, post_id: int):
@@ -67,7 +67,7 @@ def post_view(request, username: str, post_id: int):
                "comments": post.comments.all(),
                "form": form,
                "following": following}
-    return render(request, 'post.html', context)
+    return render(request, 'posts/post.html', context)
 
 
 @login_required
@@ -89,7 +89,7 @@ def post_edit(request, username: str, post_id: int):
                                 "header": "Редактировать запись",
                                 "button": "Сохранить"}
                }
-    return render(request, 'newpost.html', context)
+    return render(request, 'posts/newpost.html', context)
 
 
 @login_required
@@ -106,7 +106,7 @@ def new_post(request):
                "inscriptions": {"title": "Добавить запись",
                                 "header": "Добавить запись",
                                 "button": "Опубликовать"}}
-    return render(request, "newpost.html", context)
+    return render(request, "posts/newpost.html", context)
 
 
 @login_required
@@ -119,7 +119,7 @@ def add_comment(request, username: str, post_id: int):
         comment.post = post
         comment.save()
         return redirect("posts:post", username=username, post_id=post_id)
-    return render(request, "includes/comments.html",
+    return render(request, "posts/includes/comments.html",
                   {"form": form,
                    "post": post})
 
@@ -131,7 +131,7 @@ def follow_index(request):
     posts_list = Post.objects.filter(author__id__in=authors)
     posts_list.order_by("-pub_date")
     page = _get_pages(request, posts_list, 10)
-    return render(request, "follow.html", {"page": page})
+    return render(request, "posts/follow.html", {"page": page})
 
 
 @login_required

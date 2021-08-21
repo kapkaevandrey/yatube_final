@@ -3,15 +3,15 @@
 {% block header %}
 <main role="main" class="container">
     <div class="col-md-3 mb-3 mt-1">
-      {% include "includes/author_card.html" %}
+      {% include "posts/includes/author_card.html" %}
     </div>
 {% endblock %}
     {% block content %}
     <div class="col-md-9">
       {% for post in page %}
-        {% include "includes/post_card.html" with add_comment=True %}
+        {% include "posts/includes/post_card.html" with add_comment=True %}
       {% endfor %}
-      {% include "includes/paginator.html" %}
+      {% include "posts/includes/paginator.html" %}
     </div>
     {% endblock %}
 </main>
