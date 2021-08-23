@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Профиль пользователя {{ user.get_full_name }}{% endblock %}
-{% block header %}
+{% block header %}{% endblock %}
+{% block content %}
 <main role="main" class="container">
-    <div class="col-md-3 mb-3 mt-1">
-      {% include "posts/includes/author_card.html" %}
+    <div clas="row">
+      <div class="col-md-3 mb-3 mt-1">
+        {% include "posts/includes/author_card.html" %}
+      </div>
+      <div class="col-md-9">
+        {% for post in page %}
+          {% include "posts/includes/post_card.html" with add_comment=True %}
+        {% endfor %}
+        {% include "posts/includes/paginator.html" %}
+      </div>
     </div>
 {% endblock %}
-    {% block content %}
-    <div class="col-md-9">
-      {% for post in page %}
-        {% include "posts/includes/post_card.html" with add_comment=True %}
-      {% endfor %}
-      {% include "posts/includes/paginator.html" %}
-    </div>
-    {% endblock %}
 </main>

@@ -17,6 +17,12 @@
         </div>
       </li>
       <li class="list-group-item">
+      <div class="h6 text-muted">
+        <!-- Количество записей -->
+        Записей: {{ page.paginator.count }}
+      </div>
+      </li>
+      <li class="list-group-item">
       {% if user != author %}
           {% if following %}
             <a
@@ -25,17 +31,13 @@
       Отписаться
             </a>
           {% else %}
-            <a
+              <a
       class="btn btn-lg btn-primary"
       href="{% url 'posts:profile_follow' author.username %}" role="button">
       Подписаться
             </a>
           {% endif %}
       {% endif %}
-      <div class="h6 text-muted">
-        <!-- Количество записей -->
-        Записей: {{ page.paginator.count }}
-      </div>
       </li>
     </ul>
 </div>
