@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Посты любимых авторов{% endblock %}
+{% block header %}Последние обновления{% endblock %}
+{% block content %}
+<div class="container">
+  {% include "posts/includes/menu.html" with follow=True %}
+  {% for post in page %}
+    {% include "posts/includes/post_card.html" with post=post add_comment=True%}
+  {% endfor %}
+</div>
+  {% include "posts/includes/paginator.html" %}
+
+{% endblock %}

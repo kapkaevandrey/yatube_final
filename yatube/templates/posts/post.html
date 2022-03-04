@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Запись пользователя {{ user.get_full_name }}{% endblock %}
+{% block header %}
+<main role="main" class="container">
+  <div class="row">
+    <div class="col-md-3 mb-3 mt-1">
+      {% include "posts/includes/author_card.html" %}
+    </div>
+    {% endblock %}
+
+    {% block content %}
+    <div class="col-md-9">
+    <!-- Пост -->
+      {% include "posts/includes/post_card.html" with add_comment=False%}
+      {% include "posts/includes/comments.html" %}
+    </div>
+    {% endblock %}
+  </div>
+</main>
